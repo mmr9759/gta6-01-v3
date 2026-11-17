@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="VELMARA: Streets of Gold — an original open-world crime game. Explore the city on foot and by car, outrun the patrols, and run five story missions for the crew.">
+<title>VELMARA — Streets of Gold</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #111111;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  #game { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  .panel { position: absolute; background: rgba(10, 12, 20, 0.72); color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 8px; padding: 10px 12px;
+    backdrop-filter: blur(2px); }
+  #obj { top: 14px; left: 14px; min-width: 250px; max-width: 340px; }
+  .obj-title { font-size: 17px; font-weight: 800; color: #ffd23e; letter-spacing: 0.5px; }
+  .obj-text { font-size: 13px; margin-top: 3px; color: #f0f0f0; line-height: 1.35; }
+  .obj-dist { font-size: 12px; margin-top: 5px; color: #9fd8ff; font-weight: 700; }
+  #stats { top: 14px; right: 14px; text-align: right; min-width: 170px; }
+  .stars { font-size: 20px; letter-spacing: 3px; line-height: 1.1; }
+  .cash { font-size: 22px; font-weight: 800; color: #7de87d; margin-top: 2px; }
+  .clock { font-size: 13px; color: #cccccc; margin-top: 2px; }
+  #minimap-wrap { left: 14px; bottom: 14px; padding: 6px; }
+  #minimap { display: block; border-radius: 4px; }
+  .district-label { font-size: 12px; color: #ffd23e; font-weight: 700; margin-top: 5px; }
+  #vitals { right: 14px; bottom: 14px; min-width: 230px; }
+  .hp-bar { height: 14px; background: rgba(255,255,255,0.18); border-radius: 7px; overflow: hidden; }
+  .hp-fill { height: 100%; width: 100%; background: #4ac86a; transition: width 0.2s; }
+  .weapon { font-size: 13px; margin-top: 6px; color: #f0f0f0; font-weight: 700; }
+  #banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%);
+    font-size: 44px; font-weight: 900; color: #ffd23e; letter-spacing: 2px;
+    text-shadow: 0 3px 0 #7a4a00, 0 6px 18px rgba(0,0,0,0.8); white-space: nowrap;
+    transition: opacity 0.3s; }
+  #subtitle { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+    max-width: 640px; text-align: center; font-size: 16px; color: #ffffff;
+    background: rgba(0,0,0,0.65); padding: 8px 16px; border-radius: 6px; line-height: 1.4;
+    transition: opacity 0.3s; }
+  #toast { position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
+    font-size: 14px; color: #ffe89a; background: rgba(0,0,0,0.6); padding: 6px 14px;
+    border-radius: 6px; transition: opacity 0.3s; white-space: nowrap; }
+  #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; color: rgba(255,255,255,0.75); text-shadow: 0 1px 2px #000; }
+  #screens { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+  #title-screen, #pause-screen, #end-screen { position: absolute; inset: 0; display: none;
+    flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background: linear-gradient(180deg, rgba(10,14,30,0.55) 0%, rgba(10,14,30,0.82) 100%);
+    color: #ffffff; pointer-events: auto; padding: 20px; }
+  #title-screen h1 { font-size: 84px; font-weight: 900; letter-spacing: 10px; color: #ffd23e;
+    text-shadow: 0 4px 0 #7a4a00, 0 10px 30px rgba(0,0,0,0.9); line-height: 1; }
+  #title-screen h2 { font-size: 26px; letter-spacing: 14px; color: #ffffff; margin-top: 6px; }
+  #pause-screen h1, #end-screen h1 { font-size: 64px; font-weight: 900; letter-spacing: 8px;
+    color: #ffd23e; text-shadow: 0 4px 0 #7a4a00, 0 8px 24px rgba(0,0,0,0.9); }
+  #end-screen h1 { color: #ff5a4a; text-shadow: 0 4px 0 #6a1000, 0 8px 24px rgba(0,0,0,0.9); }
+  .story { max-width: 620px; font-size: 16px; line-height: 1.55; margin-top: 26px; color: #f0ead8; }
+  .controls { font-size: 13px; color: #c8d8e8; margin-top: 18px; max-width: 640px; line-height: 1.5; }
+  #end-text { font-size: 16px; color: #f0ead8; margin-top: 14px; }
+  .menu-buttons { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
+  .menu-buttons button { pointer-events: auto; cursor: pointer; font-size: 16px; font-weight: 800;
+    letter-spacing: 1px; padding: 13px 26px; border-radius: 8px; border: 2px solid #ffd23e;
+    background: #ffd23e; color: #1a1400; }
+  .menu-buttons button:hover { background: #ffe06a; }
+  .menu-buttons button:disabled { opacity: 0.45; cursor: default; }
+  .menu-buttons button:nth-child(2) { background: transparent; color: #ffd23e; }
+  .menu-buttons button:nth-child(2):hover { background: rgba(255,210,62,0.15); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud"></div>
+<div id="screens"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
